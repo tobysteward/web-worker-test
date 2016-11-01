@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+
+    <title>Web Worker Test</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { margin: 0; padding: 0; }
+        body { padding: 20px; }
+    </style>
+
+</head>
+<body>
+
+    <h1>Web Worker Test</h1>
+
+    <button onclick="getData('getCountriesWithPopulation')">Get countries with a population greater than 10 million</button>
+    <button onclick="getData('getCountryTlds')">Get Countries with TLDs</button>
+
+    <div id="feedback"></div>
+    <div id="output"></div>
+
+    <script>
+        var document;
+        var worker;
+        var Worker;
+
+        function notify(msg) {
+            "use strict";
+
+            document.getElementById("feedback").innerHTML = msg;
+        }
+
+        function output(data) {
+            "use strict";
+
+            document.getElementById("output").appendChild(data);
+        }
+
+        function startWorker(cb) {
+            "use strict";
+
+            if (Worker === "undefined") {
+                return notify("Your browser doesn't support web workers.");
+            }
+
+            worker = new Worker("worker.js");
+            cb(worker);
+        }
+
+        function onMessage(e) {
+            "use strict";
+
+            notify("Response from worker.");
+            document.getElementById("output").innerHTML = "";
+
+            var table = document.createElement("table");
+            var tbody = document.createElement("tbody");
+
+            e.data.map(function (item) {
+                var row = document.createElement("tr");
+
+                Object.keys(item).forEach(function (key) {
+                    var cell = document.createElement("td");
+                    var text = document.createTextNode(item[key]);
+
+                    cell.appendChild(text);
+                    row.appendChild(cell);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            output(table);
+        }
+
+        function getData(method) {
+            "use strict";
+
+            startWorker(function (worker) {
+                worker.onmessage = onMessage;
+                worker.postMessage(method);
+                notify("Worker started.");
+            });
+        }
+    </script>
+
+</body>
+</html>
